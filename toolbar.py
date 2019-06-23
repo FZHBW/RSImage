@@ -92,6 +92,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuAdvanced.menuAction())
     
         self.actionOpen.triggered.connect(self.Imgopen)
+        self.actionEnhancemen.triggered.connect(self.Enhancemen)
         self.retranslateUi(MainWindow)
 
 
@@ -125,23 +126,25 @@ class Ui_MainWindow(object):
         
 
     def Imgopen(self):
-        print('Hello!')
         filepath,filetype=QtWidgets.QFileDialog.getOpenFileName\
             (MainWindow,caption="文件打开",directory=self.cwd,filter="Tif File(*.tif)")
         print(filepath)
-        img=FO.RSImage(filepath)
-        imgarr=img.get_BIPImage()
-        imgarr=imgarr.astype(np.uint8)
-        imgarr=imgarr.flatten()
-        self.showimg(imgarr,img.im_width,img.im_height)
-        print("opened")
+        self.img=FO.RSImage(filepath)
+        imgarr=self.img.get_BIPImage(self.img.im_data)
+        self.showimg(imgarr,self.img.im_width,self.img.im_height)
+        print("Opened")
 
     def showimg(self,imgarr,im_width,im_height):
+        imgarr=imgarr.astype(np.uint8)
+        imgarr=imgarr.flatten()
         qImg=QtGui.QImage(imgarr.tobytes(),im_width, im_height, im_width*3, QtGui.QImage.Format_RGB888)
         graphicscene = QtWidgets.QGraphicsScene()
         graphicscene.addPixmap(QtGui.QPixmap.fromImage(qImg))
         self.graphicsView.setScene(graphicscene)
-        
+
+    def Enhancemen(self):
+        self.showimg(self.img.get_BIPImage(self.img.LinearStretch()),self.img.im_width,self.img.im_height)
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
