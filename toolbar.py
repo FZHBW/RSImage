@@ -34,10 +34,6 @@ class Ui_MainWindow(object):
         self.menubar.setObjectName("menubar")
         self.menuBaisc = QtWidgets.QMenu(self.menubar)
         self.menuBaisc.setObjectName("menuBaisc")
-        self.menuGeoCorrection = QtWidgets.QMenu(self.menuBaisc)
-        self.menuGeoCorrection.setObjectName("menuGeoCorrection")
-        self.menuReSample = QtWidgets.QMenu(self.menuGeoCorrection)
-        self.menuReSample.setObjectName("menuReSample")
         self.menuChoice = QtWidgets.QMenu(self.menubar)
         self.menuChoice.setObjectName("menuChoice")
         self.menuAdvanced = QtWidgets.QMenu(self.menubar)
@@ -48,10 +44,14 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
         self.actionOpen = QtWidgets.QAction(MainWindow)
         self.actionOpen.setObjectName("actionOpen")
+        self.actionFilter = QtWidgets.QAction(MainWindow)
+        self.actionFilter.setObjectName("actionFilter")
         self.actionEnhancemen = QtWidgets.QAction(MainWindow)
         self.actionEnhancemen.setObjectName("actionEnhancemen")
         self.actionHistogramMatch = QtWidgets.QAction(MainWindow)
         self.actionHistogramMatch.setObjectName("actionHistogramMatch")
+        self.actionGeoCorrection = QtWidgets.QAction(self.menuBaisc)
+        self.actionGeoCorrection.setObjectName("actionGeoCorrection")
         self.actionPCA = QtWidgets.QAction(MainWindow)
         self.actionPCA.setObjectName("actionPCA")
         self.actionLinear = QtWidgets.QAction(MainWindow)
@@ -60,10 +60,6 @@ class Ui_MainWindow(object):
         self.actionDouble = QtWidgets.QAction(MainWindow)
         self.actionDouble.setCheckable(True)
         self.actionDouble.setObjectName("actionDouble")
-        self.actionAffineT = QtWidgets.QAction(MainWindow)
-        self.actionAffineT.setObjectName("actionAffineT")
-        self.actionPoly_Tran = QtWidgets.QAction(MainWindow)
-        self.actionPoly_Tran.setObjectName("actionPoly_Tran")
         self.actionClassify_SVM = QtWidgets.QAction(MainWindow)
         self.actionClassify_SVM.setObjectName("actionClassify_SVM")
         self.actionEdge = QtWidgets.QAction(MainWindow)
@@ -73,16 +69,15 @@ class Ui_MainWindow(object):
         self.actionSeperate = QtWidgets.QAction(MainWindow)
         self.actionSeperate.setObjectName("actionSeperate")
 
-        self.menuReSample.addAction(self.actionLinear)
-        self.menuReSample.addAction(self.actionDouble)
-        self.menuGeoCorrection.addAction(self.menuReSample.menuAction())
-        self.menuGeoCorrection.addAction(self.actionAffineT)
-        self.menuGeoCorrection.addAction(self.actionPoly_Tran)
+        
+        
+
         self.menuBaisc.addAction(self.actionOpen)
+        self.menuBaisc.addAction(self.actionFilter)
         self.menuBaisc.addAction(self.actionEnhancemen)
         self.menuBaisc.addAction(self.actionHistogramMatch)
         self.menuBaisc.addAction(self.actionPCA)
-        self.menuBaisc.addAction(self.menuGeoCorrection.menuAction())
+        self.menuBaisc.addAction(self.actionGeoCorrection)
         self.menuBaisc.addAction(self.actionClassify_SVM)
         self.menuChoice.addAction(self.actionEdge)
         self.menuChoice.addAction(self.actionFouri)
@@ -93,6 +88,10 @@ class Ui_MainWindow(object):
     
         self.actionOpen.triggered.connect(self.Imgopen)
         self.actionEnhancemen.triggered.connect(self.Enhancemen)
+        self.actionPCA.triggered.connect(self.PCA)
+        self.actionFilter.triggered.connect(self.filter)
+        self.actionHistogramMatch.triggered.connect(self.diagrammatch)
+        
         self.retranslateUi(MainWindow)
 
 
@@ -106,18 +105,16 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.menuBaisc.setTitle(_translate("MainWindow", "Baisc"))
-        self.menuGeoCorrection.setTitle(_translate("MainWindow", "GeoCorrection"))
-        self.menuReSample.setTitle(_translate("MainWindow", "ReSample"))
         self.menuChoice.setTitle(_translate("MainWindow", "Choice"))
         self.menuAdvanced.setTitle(_translate("MainWindow", "Advanced"))
+        self.actionGeoCorrection.setText(_translate("MainWindow", "GeoCorrection"))
         self.actionEnhancemen.setText(_translate("MainWindow", "Enhancemen"))
         self.actionOpen.setText(_translate("MainWindow", "Open"))
+        self.actionFilter.setText(_translate("MainWindow", "Filter"))
         self.actionHistogramMatch.setText(_translate("MainWindow", "HistogramMatch"))
         self.actionPCA.setText(_translate("MainWindow", "PCA"))
         self.actionLinear.setText(_translate("MainWindow", "Linear"))
         self.actionDouble.setText(_translate("MainWindow", "Double"))
-        self.actionAffineT.setText(_translate("MainWindow", "Affine Trans"))
-        self.actionPoly_Tran.setText(_translate("MainWindow", "Poly Trans"))
         self.actionClassify_SVM.setText(_translate("MainWindow", "Classify(SVM)"))
         self.actionEdge.setText(_translate("MainWindow", "Edge"))
         self.actionFouri.setText(_translate("MainWindow", "Fourier"))
@@ -130,7 +127,7 @@ class Ui_MainWindow(object):
             (MainWindow,caption="文件打开",directory=self.cwd,filter="Tif File(*.tif)")
         print(filepath)
         self.img=FO.RSImage(filepath)
-        imgarr=self.img.get_BIPImage(self.img.im_data)
+        imgarr=self.img.getshowimg(self.img.get_BIPImage(self.img.im_data))
         self.showimg(imgarr,self.img.im_width,self.img.im_height)
         print("Opened")
 
@@ -143,9 +140,22 @@ class Ui_MainWindow(object):
         self.graphicsView.setScene(graphicscene)
 
     def Enhancemen(self):
-        self.showimg(self.img.get_BIPImage(self.img.LinearStretch()),self.img.im_width,self.img.im_height)
+        self.showimg(self.img.getshowimg(self.img.LinearStretch()),self.img.im_width,self.img.im_height)
 
+    def PCA(self):
+        self.showimg(self.img.getshowimg(self.img.PCAChange(3)),self.img.im_width,self.img.im_height)
 
+    def filter(self):
+        filepath,filetype=QtWidgets.QFileDialog.getOpenFileName\
+            (MainWindow,caption="文件打开",directory=self.cwd,filter="TXT File(*.txt)")
+        self.showimg(self.img.getshowimg(self.img.get_BIPImage(self.img.ConvFilter(filepath))),self.img.im_width,self.img.im_height)
+
+    def diagrammatch(self):
+        filepath,filetype=QtWidgets.QFileDialog.getOpenFileName\
+            (MainWindow,caption="文件打开",directory=self.cwd,filter="tif File(*.tif)")
+        self.showimg(self.img.getshowimg(self.img.get_BIPImage(self.img.DiagrameMatch(filepath))),self.img.im_width,self.img.im_height)
+
+    
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
