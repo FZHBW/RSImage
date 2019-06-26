@@ -3,7 +3,10 @@ import math as m
 import numpy as np
 from osgeo import gdal
 import linecache
-import FormulaMaker as FM
+import coordinatetrans as cd
+import Resample as rp
+import bp
+import ISODatamulti as ISO
 
 class RSImage:
       #打开文件
@@ -42,22 +45,22 @@ class RSImage:
             self.im_data = self.dataset.ReadAsArray(0,0,self.im_width,self.im_height)#将读取的数据作为
             self.operate_data=self.im_data.copy()#拷贝一份数据避免原数据被损坏
             self.LinearStretch()
-            #self.DiagrameMatch()
+            #self.Geometric_correction('/Users/huangyh/Documents/PythonLearning/RSImage/points.txt')
             print('hello')
 
       def get_BIPImage(self,imgarr):
             #从数据中提取波段
             im_BIPArray=np.append(\
-                  imgarr[2,0:self.im_height,0:self.im_width].reshape(self.im_height*self.im_width,1),\
-                  imgarr[1,0:self.im_height,0:self.im_width].reshape(self.im_height*self.im_width,1),axis=1)#合并红绿波段
+                  imgarr[2,0:imgarr.shape[1],0:imgarr.shape[2]].reshape(imgarr.shape[1]*imgarr.shape[2],1),\
+                  imgarr[1,0:imgarr.shape[1],0:imgarr.shape[2]].reshape(imgarr.shape[1]*imgarr.shape[2],1),axis=1)#合并红绿波段
 
             im_BIPArray=np.append(im_BIPArray,\
-                  imgarr[0,0:self.im_height,0:self.im_width].reshape(self.im_height*self.im_width,1),axis=1)#合并红绿蓝波段
+                  imgarr[0,0:imgarr.shape[1],0:imgarr.shape[2]].reshape(imgarr.shape[1]*imgarr.shape[2],1),axis=1)#合并红绿蓝波段
             if imgarr.shape[0]>3:
                   im_BIPArray=np.append(im_BIPArray,\
-                        imgarr[3,0:self.im_height,0:self.im_width].reshape(self.im_height*self.im_width,1),axis=1)#合并红绿蓝近红外波段
+                        imgarr[3,0:imgarr.shape[1],0:imgarr.shape[2]].reshape(imgarr.shape[1]*imgarr.shape[2],1),axis=1)#合并红绿蓝近红外波段
 
-            im_BIPArray=im_BIPArray.reshape(self.im_height,self.im_width,4)#调整图像尺寸
+            im_BIPArray=im_BIPArray.reshape(imgarr.shape[1],imgarr.shape[2],4)#调整图像尺寸
             return im_BIPArray
 
       def getshowimg(self,im_BIPArray):
@@ -95,9 +98,8 @@ class RSImage:
             self.Historydata=np.array(self.Historydata)
             self.lHistorydata=np.array(self.Historydata)
             self.Historyindex=np.array(self.Historyindex)
-            
-            return self.get_BIPImage(temparr)
-            
+            self.stretcharr=self.get_BIPImage(temparr)
+                    
       def PCAChange(self,n):
             self.pcaarr=self.get_BIPImage(self.im_data)#将图像转化为BIP格式便于计算
             cacutemparr=self.pcaarr.reshape(self.im_height*self.im_width,4)#将图像转为m*n的形式
@@ -158,21 +160,46 @@ class RSImage:
             return filterarr
 
       def Geometric_correction(self,Path1,Path2):
-            BasicInfo=open(Path1)
+            info=np.loadtxt(Path1)
+            points=np.loadtxt(Path2)
+            n=int(info[0])
+            rptype=int(info[1])
+            point4=[]
+            fx,fy,bx,by=cd.fbsolve(points,n)
+            arr0 = np.array([[0, 0], 
+                             [0,self.im_height], 
+                             [self.im_width, 0],
+                             [self.im_width, self.im_height]])
+            arr0=arr0.reshape((4,2))
+            bandory=cd.cacu_coordinatea(fx,fy,arr0,n)
 
+            self.newsize=np.max(bandory,axis=0)-np.min(bandory,axis=0)
+            self.NewImagearray=np.zeros((4,int(self.newsize[1]+1),int(self.newsize[0]+1)))
+            self.new_im_heigth=int(self.newsize[1])
+            self.new_im_width=int(self.newsize[0])
+            if rptype==1:
+                  for i in range(0,self.new_im_heigth-1):
+                        for j in range(0,self.new_im_width-1): 
+                              ox,oy=cd.cacu_coordinate(bx,by,j,i,n)
+                              if ox>=0 and oy>=0 and ox<self.im_width and oy<self.im_height:
+                                    self.NewImagearray[:,i,j]=rp.Nearest(self.operate_data,ox,oy)
+            if rptype==2:
+                  for i in range(0,self.new_im_heigth-1):
+                        for j in range(0,self.new_im_width-1): 
+                              ox,oy=cd.cacu_coordinate(bx,by,j,i,n)
+                              if ox>=0 and oy>=0 and ox<self.im_width and oy<self.im_height:
+                                    self.NewImagearray[:,i,j]=rp.Bilinear(self.operate_data,ox,oy)
             print('GC')
+            return self.NewImagearray
+
+      def ISODataSeperator(self,Path):
+            if Path=='':
+                  return ISO.ISOData(self.dataset)
+            else:
+                  info=np.loadtxt(Path)
+                  return ISO.ISOData(self.dataset,info[0],info[1],info[2],info[3],info[4],info[5])
+            print('sdfd')
       
-      def Equation_Solver(self,Path,n):
-            points=np.loadtxt(Path)
-            opointx=points[:,0]
-            opointy=points[:,1]
-            repointx=points[:,2]
-            repointy=points[:,3]
-            Array1=np.append(opointx,opointy,axis=0)
-            Array1=np.append(Array1,opointx*opointx,axis=0)
-            #Array1=np.append()
-
-
-
-
-            print('Sloved')
+      def BpSeperate(self,Path):
+            Numerical=bp.BP_identify(Path)
+            return Numerical.seperate(self.get_BIPImage(self.operate_data))

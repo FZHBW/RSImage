@@ -60,8 +60,8 @@ class Ui_MainWindow(object):
         self.actionDouble = QtWidgets.QAction(MainWindow)
         self.actionDouble.setCheckable(True)
         self.actionDouble.setObjectName("actionDouble")
-        self.actionClassify_SVM = QtWidgets.QAction(MainWindow)
-        self.actionClassify_SVM.setObjectName("actionClassify_SVM")
+        self.actionClassify_ISOData = QtWidgets.QAction(MainWindow)
+        self.actionClassify_ISOData.setObjectName("actionClassify_ISOData")
         self.actionEdge = QtWidgets.QAction(MainWindow)
         self.actionEdge.setObjectName("actionEdge")
         self.actionFouri = QtWidgets.QAction(MainWindow)
@@ -78,7 +78,7 @@ class Ui_MainWindow(object):
         self.menuBaisc.addAction(self.actionHistogramMatch)
         self.menuBaisc.addAction(self.actionPCA)
         self.menuBaisc.addAction(self.actionGeoCorrection)
-        self.menuBaisc.addAction(self.actionClassify_SVM)
+        self.menuBaisc.addAction(self.actionClassify_ISOData)
         self.menuChoice.addAction(self.actionEdge)
         self.menuChoice.addAction(self.actionFouri)
         self.menuAdvanced.addAction(self.actionSeperate)
@@ -91,10 +91,10 @@ class Ui_MainWindow(object):
         self.actionPCA.triggered.connect(self.PCA)
         self.actionFilter.triggered.connect(self.filter)
         self.actionHistogramMatch.triggered.connect(self.diagrammatch)
-        
+        self.actionClassify_ISOData.triggered.connect(self.ISO)
+        self.actionSeperate.triggered.connect(self.BPNet)
+        self.actionGeoCorrection.triggered.connect(self.graphiccorrectr)
         self.retranslateUi(MainWindow)
-
-
         self.cwd = os.getcwd()
 
 
@@ -115,12 +115,10 @@ class Ui_MainWindow(object):
         self.actionPCA.setText(_translate("MainWindow", "PCA"))
         self.actionLinear.setText(_translate("MainWindow", "Linear"))
         self.actionDouble.setText(_translate("MainWindow", "Double"))
-        self.actionClassify_SVM.setText(_translate("MainWindow", "Classify(SVM)"))
+        self.actionClassify_ISOData.setText(_translate("MainWindow", "Classify(ISOData)"))
         self.actionEdge.setText(_translate("MainWindow", "Edge"))
         self.actionFouri.setText(_translate("MainWindow", "Fourier"))
         self.actionSeperate.setText(_translate("MainWindow", "Seperate"))
-
-        
 
     def Imgopen(self):
         filepath,filetype=QtWidgets.QFileDialog.getOpenFileName\
@@ -140,7 +138,7 @@ class Ui_MainWindow(object):
         self.graphicsView.setScene(graphicscene)
 
     def Enhancemen(self):
-        self.showimg(self.img.getshowimg(self.img.LinearStretch()),self.img.im_width,self.img.im_height)
+        self.showimg(self.img.getshowimg(self.img.stretcharr),self.img.im_width,self.img.im_height)
 
     def PCA(self):
         self.showimg(self.img.getshowimg(self.img.PCAChange(3)),self.img.im_width,self.img.im_height)
@@ -155,6 +153,24 @@ class Ui_MainWindow(object):
             (MainWindow,caption="文件打开",directory=self.cwd,filter="tif File(*.tif)")
         self.showimg(self.img.getshowimg(self.img.get_BIPImage(self.img.DiagrameMatch(filepath))),self.img.im_width,self.img.im_height)
 
+    def ISO(self):
+        filepath,filetype=QtWidgets.QFileDialog.getOpenFileName\
+            (MainWindow,caption="文件打开",directory=self.cwd,filter="txt File(*.txt)")
+        self.showimg(self.img.ISODataSeperator(filepath),(self.img.im_width),(self.img.im_height))
+
+    def BPNet(self):
+        filepath,filetype=QtWidgets.QFileDialog.getOpenFileName\
+            (MainWindow,caption="点数据文件打开",directory=self.cwd,filter="TXT File(*.txt)")
+        self.showimg(self.img.BpSeperate(filepath),self.img.im_width,self.img.im_height)
+
+    def graphiccorrectr(self):
+        filepath1,filetype=QtWidgets.QFileDialog.getOpenFileName\
+            (MainWindow,caption="基础信息文件打开",directory=self.cwd,filter="TXT File(*.txt)")
+        filepath2,filetype=QtWidgets.QFileDialog.getOpenFileName\
+            (MainWindow,caption="控制点文件打开",directory=self.cwd,filter="TXT File(*.txt)")
+        temp=self.img.get_BIPImage(self.img.Geometric_correction(filepath1, filepath2))
+        temp=np.where(temp==0,temp+1024,temp)
+        self.showimg(self.img.getshowimg(temp),self.img.new_im_width+1,self.img.new_im_heigth+1)
     
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
