@@ -35,6 +35,7 @@ def fbsolve(xyarray,n):
                     np.dot(xyarray[:,1].T,xyarray[:,1]))
         return answerfx,answerfy,answerbx,answerby
 
+
 def cacu_coordinatea(changearrayx,changearrayy,pointarray,n):
     a1=np.zeros((pointarray.shape[0],1))
     changearrayx=changearrayx.reshape(1,changearrayx.shape[0])
@@ -53,15 +54,3 @@ def cacu_coordinate(changearrayx,changearrayy,nx,ny,n):
             for j in range(0,i+1):
                 a1=np.append(a1,(np.power(nx,i-j)*np.power(ny,j)))
     return np.dot(changearrayx,a1.T),np.dot(changearrayy,a1.T)
-    '''
-    a1=np.zeros((pointarray.shape[0],1))
-    changearrayx=changearrayx.reshape(1,changearrayx.shape[0])
-    changearrayy=changearrayy.reshape(1,changearrayy.shape[0])
-    for i in range(0,n+1):
-            for j in range(0,i+1):
-                a1=np.append(a1,(np.power(pointarray[:,0],i-j)*np.power(pointarray[:,1],j)).reshape(pointarray.shape[0],1),axis=1)
-    a1=np.delete(a1,0,axis=1)
-    a1=a1.T
-    point=np.array([np.dot(changearrayx,a1),np.dot(changearrayy,a1)]).reshape(pointarray.shape[0],2)
-    return point
-    '''

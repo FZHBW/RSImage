@@ -160,8 +160,8 @@ class RSImage:
             return filterarr
 
       def Geometric_correction(self,Path1,Path2):
-            info=np.loadtxt(Path1)
-            points=np.loadtxt(Path2)
+            info=np.loadtxt('/Users/huangyh/Documents/PythonLearning/PythonLearning/gcinfo.txt')
+            points=np.loadtxt('/Users/huangyh/Documents/PythonLearning/PythonLearning/gcpoints.txt')
             n=int(info[0])
             rptype=int(info[1])
             point4=[]

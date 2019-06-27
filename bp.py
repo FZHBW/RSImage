@@ -62,9 +62,9 @@ class BP_identify:
                   for ty in range(0,showimg.shape[1]):
                         t=np.argmax(self.network.predict((showimg[tx,ty,:]).reshape(1,4)), axis=1)[0] 
                         if t==0:
-                              color[0]=255
-                        elif t==1:
                               color[1]=255
+                        elif t==1:
+                              color[0]=255
                         elif t==2:
                               color[2]=255
                         showimg[tx,ty,0:3]=color
